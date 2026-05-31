@@ -30,6 +30,11 @@ export async function POST(request: NextRequest) {
     const { email, password, first_name, last_name, role } = parsed.data;
     const normalizedEmail = email.toLowerCase().trim();
     const supabase = createServiceClient();
+console.log("SUPABASE_URL =", process.env.NEXT_PUBLIC_SUPABASE_URL);
+console.log(
+  "SERVICE_KEY_EXISTS =",
+  !!process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
     const { data: existingUser } = await supabase
       .from("users")
