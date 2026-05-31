@@ -17,7 +17,7 @@
     "@hookform/resolvers": "^3.9.1",
     "@react-email/components": "^0.0.27",
     "@supabase/ssr": "^0.5.2",
-    "@supabase/supabase-js": "^2.47.10",
+    "@supabase/supabase-js": "^2.106.2",
     "bcryptjs": "^2.4.3",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
