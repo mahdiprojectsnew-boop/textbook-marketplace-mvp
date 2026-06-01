@@ -33,7 +33,48 @@ export async function POST(request: NextRequest) {
     .eq("buyer_id", user.id)
     .single();
 
-  if (existing) return NextResponse.json({ conversation_id: existing.id });
+  if (existing) {
+  await supabase
+    .from("transactions")
+    .insert({
+      listing_id,
+      buyer_id: user.id,
+      seller_id: listing.seller_id,
+      transaction_type: "rental",
+      status: "pending",
+    });
+
+  await supabase
+    .from("notifications")
+    .insert({
+      user_id: listing.seller_id,
+      type: "rental_request",
+      title: "New Rental Request",
+      body: "A user has requested to rent your book.",
+    });
+
+  return NextResponse.json({ conversation_id: existing.id });
+}
+// Create transaction record
+await supabase
+  .from("transactions")
+  .insert({
+    listing_id,
+    buyer_id: user.id,
+    seller_id: listing.seller_id,
+    transaction_type: "rental",
+    status: "pending",
+  });
+
+// Create notification for seller
+await supabase
+  .from("notifications")
+  .insert({
+    user_id: listing.seller_id,
+    type: "rental_request",
+    title: "New Rental Request",
+    body: "A user has requested to rent your book.",
+  });
 
   const { data: created, error } = await supabase
     .from("conversations")
