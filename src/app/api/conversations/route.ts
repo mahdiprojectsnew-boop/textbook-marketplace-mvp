@@ -122,37 +122,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { error: notificationError } = await supabase
-    .from("notifications")
-    .insert({
-      user_id: listing.seller_id,
-      type:
-        transactionType === "purchase"
-          ? "purchase_request"
-          : "rental_request",
-      title:
-        transactionType === "purchase"
-          ? "New Purchase Request"
-          : "New Rental Request",
-      body:
-        transactionType === "purchase"
-          ? "A user wants to buy your book."
-          : "A user has requested to rent your book.",
-    });
-
-  if (notificationError) {
-    console.error("NOTIFICATION ERROR:", notificationError);
-
-    return NextResponse.json(
-      {
-        error: "Failed to create notification",
-        details: notificationError.message,
-        code: notificationError.code,
-      },
-      { status: 500 }
-    );
-  }
-
+  
   return NextResponse.json({
     conversation_id: conversationId,
   });
