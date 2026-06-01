@@ -10,6 +10,7 @@ import {
   BookOpen,
   ArrowRight,
 } from "lucide-react";
+import { RequestActionButtons } from "./RequestActionButtons";
 
 function money(value: number | null | undefined) {
   if (value === null || value === undefined) return "—";
@@ -253,40 +254,8 @@ export default async function RequestsPage({
                       </div>
 
                       {tx.status === "pending" && (
-                        <div className="mt-4 flex gap-2">
-                          <form action={updateTransactionStatus} className="flex-1">
-                            <input
-                              type="hidden"
-                              name="transaction_id"
-                              value={tx.id}
-                            />
-                            <input type="hidden" name="action" value="accepted" />
-                            <button
-                              type="submit"
-                              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition"
-                            >
-                              <CheckCircle2 size={15} />
-                              Accept
-                            </button>
-                          </form>
-
-                          <form action={updateTransactionStatus} className="flex-1">
-                            <input
-                              type="hidden"
-                              name="transaction_id"
-                              value={tx.id}
-                            />
-                            <input type="hidden" name="action" value="declined" />
-                            <button
-                              type="submit"
-                              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-red-50 text-red-700 text-sm font-semibold hover:bg-red-100 transition"
-                            >
-                              <XCircle size={15} />
-                              Decline
-                            </button>
-                          </form>
-                        </div>
-                      )}
+  <RequestActionButtons transactionId={tx.id} />
+)}
                     </div>
                   );
                 })}
