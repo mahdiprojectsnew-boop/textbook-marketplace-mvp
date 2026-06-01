@@ -9,36 +9,76 @@ export async function POST(
   const { id: conversation_id } = await params;
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const { body } = await request.json();
-  if (!body?.trim()) return NextResponse.json({ error: "Message body required" }, { status: 400 });
 
-  // Verify user is a participant
-  const { data: convo } = await supabase
+  if (!body?.trim()) {
+    return NextResponse.json(
+      { error: "Message body required" },
+      { status: 400 }
+    );
+  }
+
+  // Verify user is a participant in this conversation
+  const { data: convo, error: convoError } = await supabase
     .from("conversations")
     .select("id")
     .eq("id", conversation_id)
     .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
     .single();
 
-  if (!convo) return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
+  if (convoError || !convo) {
+    return NextResponse.json(
+      { error: "Conversation not found" },
+      { status: 404 }
+    );
+  }
 
-  const { data: message, error } = await supabase
+  // Create message
+  const { data: message, error: messageError } = await supabase
     .from("conversation_messages")
-    .insert({ conversation_id, sender_id: user.id, body: body.trim() })
+    .insert({
+      conversation_id,
+      sender_id: user.id,
+      body: body.trim(),
+    })
     .select("id, body, sender_id, created_at, read_at")
     .single();
 
-  if (error || !message) {
-    return NextResponse.json({ error: "Failed to send message" }, { status: 500 });
+  if (messageError || !message) {
+    console.error("SEND MESSAGE ERROR:", messageError);
+
+    return NextResponse.json(
+      {
+        error: "Failed to send message",
+        details: messageError?.message,
+      },
+      { status: 500 }
+    );
+  }
+
+  // Update conversation timestamp so it appears correctly in /messages
+  const { error: updateConversationError } = await supabase
+    .from("conversations")
+    .update({ updated_at: new Date().toISOString() })
+    .eq("id", conversation_id);
+
+  if (updateConversationError) {
+    console.error("UPDATE CONVERSATION ERROR:", updateConversationError);
   }
 
   return NextResponse.json({ message });
 }
 
-// PATCH /api/conversations/[id]/messages — mark all as read
+// PATCH /api/conversations/[id]/messages
+// Mark all received messages in this conversation as read
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -46,8 +86,13 @@ export async function PATCH(
   const { id: conversation_id } = await params;
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   await supabase
     .from("conversation_messages")
