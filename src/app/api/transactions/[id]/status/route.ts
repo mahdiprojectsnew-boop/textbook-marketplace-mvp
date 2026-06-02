@@ -18,17 +18,25 @@ export async function PATCH(
 
   const { status } = await request.json();
 
-  if (!["accepted", "declined"].includes(status)) {
+  const newStatus =
+    status === "accepted"
+      ? "active"
+      : status === "declined"
+      ? "cancelled"
+      : null;
+
+  if (!newStatus) {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
   }
 
   const { data: updated, error: updateError } = await supabase
     .from("transactions")
     .update({
-      status,
+      status: newStatus,
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)
+    .eq("seller_id", user.id)
     .select("id, status, seller_id, buyer_id");
 
   if (updateError) {
@@ -54,7 +62,6 @@ export async function PATCH(
 
   return NextResponse.json({
     success: true,
-    user_id: user.id,
     transaction: updated,
   });
 }
