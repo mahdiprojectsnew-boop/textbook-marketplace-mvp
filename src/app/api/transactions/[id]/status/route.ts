@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-// PATCH /api/transactions/[id]/status
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -23,55 +22,29 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
   }
 
-  const { data: transaction, error: findError } = await supabase
-    .from("transactions")
-    .select("id, seller_id, listing_id, transaction_type")
-    .eq("id", id)
-    .eq("seller_id", user.id)
-    .single();
-
-  if (findError || !transaction) {
-    return NextResponse.json(
-      { error: "Transaction not found or not allowed" },
-      { status: 404 }
-    );
-  }
-
-  const { error: updateError } = await supabase
+  const { data: updated, error: updateError } = await supabase
     .from("transactions")
     .update({
       status,
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)
-    .eq("seller_id", user.id);
+    .eq("seller_id", user.id)
+    .select("id, status")
+    .single();
 
-  if (updateError) {
-    console.error("UPDATE TRANSACTION STATUS ERROR:", updateError);
-
+  if (updateError || !updated) {
     return NextResponse.json(
       {
-        error: "Failed to update transaction",
-        details: updateError.message,
-        code: updateError.code,
+        error: "Update failed",
+        details: updateError?.message ?? "No row was updated",
       },
       { status: 500 }
     );
   }
 
-  if (status === "accepted") {
-    await supabase
-      .from("listings")
-      .update({
-        status: "pending",
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", transaction.listing_id)
-      .eq("seller_id", user.id);
-  }
-
   return NextResponse.json({
     success: true,
-    status,
+    transaction: updated,
   });
 }
