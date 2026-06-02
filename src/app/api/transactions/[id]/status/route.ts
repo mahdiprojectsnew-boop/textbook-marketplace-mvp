@@ -31,7 +31,6 @@ export async function PATCH(
     .eq("id", id)
     .eq("seller_id", user.id)
     .select("id, status")
-    .single();
 
   if (updateError || !updated) {
     return NextResponse.json(
