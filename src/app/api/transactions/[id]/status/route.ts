@@ -29,21 +29,32 @@ export async function PATCH(
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)
-    .eq("seller_id", user.id)
-    .select("id, status")
+    .select("id, status, seller_id, buyer_id");
 
-  if (updateError || !updated) {
+  if (updateError) {
     return NextResponse.json(
       {
         error: "Update failed",
-        details: updateError?.message ?? "No row was updated",
+        details: updateError.message,
       },
       { status: 500 }
     );
   }
 
+  if (!updated || updated.length === 0) {
+    return NextResponse.json(
+      {
+        error: "No transaction updated",
+        user_id: user.id,
+        transaction_id: id,
+      },
+      { status: 404 }
+    );
+  }
+
   return NextResponse.json({
     success: true,
+    user_id: user.id,
     transaction: updated,
   });
 }
