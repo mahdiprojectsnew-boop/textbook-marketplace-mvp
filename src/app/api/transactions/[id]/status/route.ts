@@ -19,11 +19,11 @@ export async function PATCH(
   const { status } = await request.json();
 
   const newStatus =
-    status === "accepted"
-      ? "active"
-      : status === "declined"
-      ? "cancelled"
-      : null;
+  status === "accepted"
+    ? "meeting_confirmed"
+    : status === "declined"
+    ? "cancelled"
+    : null;
 
   if (!newStatus) {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
