@@ -7,7 +7,11 @@ async function adminLogin(formData: FormData) {
   const password = String(formData.get("password") || "");
   const next = String(formData.get("next") || "/admin");
 
-  const adminPassword = process.env.ADMIN_TEST_PASSWORD || "admin12345";
+  const adminPassword = process.env.ADMIN_TEST_PASSWORD;
+
+  if (!adminPassword) {
+    redirect("/admin/login?error=missing-env");
+  }
 
   if (password !== adminPassword) {
     redirect("/admin/login?error=1");
@@ -20,7 +24,7 @@ async function adminLogin(formData: FormData) {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: 60 * 60 * 24,
+    maxAge: 60 * 60 * 8,
   });
 
   redirect(next.startsWith("/admin") ? next : "/admin");
@@ -48,10 +52,16 @@ export default async function AdminLoginPage({
         </h1>
 
         <p className="text-slate-600 mt-3 text-center">
-          Enter the admin test password to continue.
+          Enter the admin password to continue.
         </p>
 
-        {params.error && (
+        {params.error === "missing-env" && (
+          <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            Admin password is not configured in production.
+          </div>
+        )}
+
+        {params.error === "1" && (
           <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             Wrong password. Try again.
           </div>
