@@ -222,7 +222,7 @@ export default async function AdminBooksPage({
             </thead>
 
             <tbody className="divide-y divide-slate-100">
-              {books?.map((book) => (
+              {books?.map((book: any) => (
                 <tr key={book.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3 font-medium text-slate-900">
                     {book.title}
