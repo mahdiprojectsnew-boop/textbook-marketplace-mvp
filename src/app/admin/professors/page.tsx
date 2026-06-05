@@ -121,7 +121,7 @@ const { data: universities } = await supabase
   className="rounded-xl border border-slate-300 px-4 py-3 text-sm"
 >
   <option value="">Select university</option>
-  {universities?.map((university) => (
+  {universities?.map((university: any) => (
     <option key={university.id} value={university.id}>
       {university.name}
     </option>
@@ -157,7 +157,7 @@ const { data: universities } = await supabase
             </thead>
 
             <tbody className="divide-y divide-slate-100">
-              {professors?.map((professor) => (
+              {professors?.map((professor: any) => (
                 <tr key={professor.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3 font-medium text-slate-900">
                     {professor.first_name} {professor.last_name}

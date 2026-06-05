@@ -20,7 +20,7 @@ export default async function AdminUniversitiesPage({
       .ilike("name", `%${q}%`)
       .limit(50);
 
-    cityIds = matchingCities?.map((city) => city.id) ?? [];
+    cityIds = matchingCities?.map((city: any) => city.id) ?? [];
   }
 
   let query = supabase
@@ -164,7 +164,7 @@ export default async function AdminUniversitiesPage({
             </thead>
 
             <tbody className="divide-y divide-slate-100">
-              {universities?.map((uni) => (
+              {universities?.map((uni: any) => (
                 <tr key={uni.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3 font-medium text-slate-900">
                     {uni.name}

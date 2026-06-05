@@ -64,7 +64,7 @@ export default async function AdminSuggestionsPage() {
             </thead>
 
             <tbody className="divide-y divide-slate-100">
-              {suggestions?.map((suggestion) => (
+              {suggestions?.map((suggestion: any) => (
                 <tr key={suggestion.id}>
                   <td className="px-4 py-3">
                     {suggestion.suggestion_type || "—"}
