@@ -112,7 +112,7 @@ export default async function AdminDepartmentsPage({
               className="rounded-xl border border-slate-300 px-4 py-3 text-sm"
             >
               <option value="">Select university</option>
-              {universities?.map((university) => (
+              {universities?.map((university: any) => (
                 <option key={university.id} value={university.id}>
                   {university.name}
                 </option>
@@ -141,7 +141,7 @@ export default async function AdminDepartmentsPage({
             </thead>
 
             <tbody className="divide-y divide-slate-100">
-              {departments?.map((department) => (
+              {departments?.map((department: any) => (
                 <tr key={department.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3 font-medium text-slate-900">
                     {department.name}
