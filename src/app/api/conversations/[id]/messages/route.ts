@@ -26,7 +26,6 @@ export async function POST(
     );
   }
 
-  // Verify user is a participant in this conversation
   const { data: convo, error: convoError } = await supabase
     .from("conversations")
     .select("id")
@@ -41,7 +40,6 @@ export async function POST(
     );
   }
 
-  // Create message
   const { data: message, error: messageError } = await supabase
     .from("conversation_messages")
     .insert({
@@ -56,19 +54,16 @@ export async function POST(
     console.error("SEND MESSAGE ERROR:", messageError);
 
     return NextResponse.json(
-      {
-        error: "Failed to send message",
-        details: messageError?.message,
-      },
+      { error: "Failed to send message" },
       { status: 500 }
     );
   }
 
-  // Update conversation timestamp so it appears correctly in /messages
   const { error: updateConversationError } = await supabase
     .from("conversations")
     .update({ updated_at: new Date().toISOString() })
-    .eq("id", conversation_id);
+    .eq("id", conversation_id)
+    .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`);
 
   if (updateConversationError) {
     console.error("UPDATE CONVERSATION ERROR:", updateConversationError);
@@ -94,12 +89,35 @@ export async function PATCH(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  await supabase
+  const { data: convo, error: convoError } = await supabase
+    .from("conversations")
+    .select("id")
+    .eq("id", conversation_id)
+    .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
+    .single();
+
+  if (convoError || !convo) {
+    return NextResponse.json(
+      { error: "Conversation not found" },
+      { status: 404 }
+    );
+  }
+
+  const { error: readError } = await supabase
     .from("conversation_messages")
     .update({ read_at: new Date().toISOString() })
     .eq("conversation_id", conversation_id)
     .neq("sender_id", user.id)
     .is("read_at", null);
+
+  if (readError) {
+    console.error("MARK READ ERROR:", readError);
+
+    return NextResponse.json(
+      { error: "Failed to mark messages as read" },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json({ success: true });
 }
