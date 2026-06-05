@@ -171,7 +171,7 @@ export default async function AdminBooksPage({
               className="rounded-xl border border-slate-300 px-4 py-3 text-sm"
             >
               <option value="">Select professor</option>
-              {professors?.map((professor) => (
+              {professors?.map((professor: any) => (
                 <option key={professor.id} value={professor.id}>
                   {professor.first_name} {professor.last_name}
                 </option>
