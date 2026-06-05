@@ -125,7 +125,7 @@ export default async function AdminCoursesPage({
               className="rounded-xl border border-slate-300 px-4 py-3 text-sm"
             >
               <option value="">Select university</option>
-              {universities?.map((university) => (
+              {universities?.map((university: any) => (
                 <option key={university.id} value={university.id}>
                   {university.name}
                 </option>
@@ -138,7 +138,7 @@ export default async function AdminCoursesPage({
               className="rounded-xl border border-slate-300 px-4 py-3 text-sm"
             >
               <option value="">Select department</option>
-              {departments?.map((department) => (
+              {departments?.map((department: any) => (
                 <option key={department.id} value={department.id}>
                   {department.name}
                 </option>
@@ -169,7 +169,7 @@ export default async function AdminCoursesPage({
             </thead>
 
             <tbody className="divide-y divide-slate-100">
-              {courses?.map((course) => (
+              {courses?.map((course: any) => (
                 <tr key={course.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3 font-medium text-slate-900">
                     {course.name}
