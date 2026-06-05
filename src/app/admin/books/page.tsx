@@ -158,7 +158,7 @@ export default async function AdminBooksPage({
               className="rounded-xl border border-slate-300 px-4 py-3 text-sm"
             >
               <option value="">Select course</option>
-              {courses?.map((course) => (
+              {courses?.map((course: any) => (
                 <option key={course.id} value={course.id}>
                   {course.code ? `${course.code} — ${course.name}` : course.name}
                 </option>
