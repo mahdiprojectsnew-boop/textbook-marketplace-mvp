@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 
 // POST /api/conversations
 // Creates or returns existing conversation for a listing+buyer pair,
-// then creates a rental transaction request and seller notification.
+// then creates a transaction request only if one does not already exist.
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
 
@@ -32,10 +32,7 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (listingError || !listing) {
-    return NextResponse.json(
-      { error: "Listing not found" },
-      { status: 404 }
-    );
+    return NextResponse.json({ error: "Listing not found" }, { status: 404 });
   }
 
   if (listing.seller_id === user.id) {
@@ -56,10 +53,7 @@ export async function POST(request: NextRequest) {
     console.error("FIND CONVERSATION ERROR:", existingError);
 
     return NextResponse.json(
-      {
-        error: "Failed to check existing conversation",
-        details: existingError.message,
-      },
+      { error: "Failed to check existing conversation" },
       { status: 500 }
     );
   }
@@ -83,10 +77,7 @@ export async function POST(request: NextRequest) {
       console.error("CREATE CONVERSATION ERROR:", createConversationError);
 
       return NextResponse.json(
-        {
-          error: "Failed to create conversation",
-          details: createConversationError?.message,
-        },
+        { error: "Failed to create conversation" },
         { status: 500 }
       );
     }
@@ -97,60 +88,72 @@ export async function POST(request: NextRequest) {
   const transactionType =
     listing.listing_type === "sale" ? "purchase" : "rental";
 
-  const { error: transactionError } = await supabase
-    .from("transactions")
-    .insert({
-      listing_id,
-      buyer_id: user.id,
-      seller_id: listing.seller_id,
-      transaction_type: transactionType,
-      status: "pending",
-      amount: listing.price ?? null,
-      deposit_amount: listing.deposit_amount ?? null,
-    });
+  const { data: existingTransaction, error: existingTransactionError } =
+    await supabase
+      .from("transactions")
+      .select("id")
+      .eq("listing_id", listing_id)
+      .eq("buyer_id", user.id)
+      .in("status", ["pending", "meeting_confirmed"])
+      .maybeSingle();
 
-  if (transactionError) {
-    console.error("TRANSACTION ERROR:", transactionError);
+  if (existingTransactionError) {
+    console.error("FIND TRANSACTION ERROR:", existingTransactionError);
 
     return NextResponse.json(
-      {
-        error: "Failed to create transaction",
-        details: transactionError.message,
-        code: transactionError.code,
-      },
+      { error: "Failed to check existing transaction" },
       { status: 500 }
     );
   }
 
-  const { error: notificationError } = await supabase
-    .from("notifications")
-    .insert({
-      user_id: listing.seller_id,
-      type:
-        transactionType === "purchase"
-          ? "purchase_request"
-          : "rental_request",
-      title:
-        transactionType === "purchase"
-          ? "New Purchase Request"
-          : "New Rental Request",
-      body:
-        transactionType === "purchase"
-          ? "A user wants to buy your book."
-          : "A user has requested to rent your book.",
-    });
+  if (!existingTransaction) {
+    const { error: transactionError } = await supabase
+      .from("transactions")
+      .insert({
+        listing_id,
+        buyer_id: user.id,
+        seller_id: listing.seller_id,
+        transaction_type: transactionType,
+        status: "pending",
+        amount: listing.price ?? null,
+        deposit_amount: listing.deposit_amount ?? null,
+      });
 
-  if (notificationError) {
-    console.error("NOTIFICATION ERROR:", notificationError);
+    if (transactionError) {
+      console.error("TRANSACTION ERROR:", transactionError);
 
-    return NextResponse.json(
-      {
-        error: "Failed to create notification",
-        details: notificationError.message,
-        code: notificationError.code,
-      },
-      { status: 500 }
-    );
+      return NextResponse.json(
+        { error: "Failed to create transaction" },
+        { status: 500 }
+      );
+    }
+
+    const { error: notificationError } = await supabase
+      .from("notifications")
+      .insert({
+        user_id: listing.seller_id,
+        type:
+          transactionType === "purchase"
+            ? "purchase_request"
+            : "rental_request",
+        title:
+          transactionType === "purchase"
+            ? "New Purchase Request"
+            : "New Rental Request",
+        body:
+          transactionType === "purchase"
+            ? "A user wants to buy your book."
+            : "A user has requested to rent your book.",
+      });
+
+    if (notificationError) {
+      console.error("NOTIFICATION ERROR:", notificationError);
+
+      return NextResponse.json(
+        { error: "Failed to create notification" },
+        { status: 500 }
+      );
+    }
   }
 
   return NextResponse.json({
